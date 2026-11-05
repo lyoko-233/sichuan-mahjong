@@ -1,7 +1,9 @@
-# 四川麻将 GitHub Pages 第36版
+# 四川麻将 GitHub Pages 第37版
 
-修改时间：2026-11-05 23:20（北京时间）
+修改时间：2026-11-06 00:39（北京时间）
 
-这是第36版的 GitHub Pages 静态站点。将本目录内容放入公开仓库的 `main` 分支根目录，然后在仓库 Settings → Pages 中选择 Deploy from a branch、`main`、`/(root)`。页面入口为 `index.html`。
+公开试玩：https://lyoko-233.github.io/sichuan-mahjong/
 
-保留第36版 Sites 原链接：https://grass-sichuan-mahjong-v36-victory-20261105.quick-lynx-8405.chatgpt.site/
+第37版增加手机竖屏进入牌局时的横置引导和全屏横屏尝试；手机横置后使用牌桌布局。部分浏览器不支持网页锁定方向，届时需要关闭手机的竖屏锁定并手动横置。
+
+第36版源码保留在提交 `434fed7b9be1f3a509c766c0542f9603edb7b880`，第36版原试玩链接：https://grass-sichuan-mahjong-v36-victory-20261105.quick-lynx-8405.chatgpt.site/

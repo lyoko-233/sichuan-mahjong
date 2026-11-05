@@ -543,3 +543,26 @@
 @keyframes v35-draw-stars{from{opacity:0;transform:translate(-50%,9px)}30%{opacity:1}to{opacity:0;transform:translate(-50%,-14px)}}
 @media(orientation:landscape) and (max-height:560px){.board-flower{width:18px;height:18px;font-size:12px;border-width:1px}.board-sprig{font-size:12px}.sprig-n{top:4%}.sprig-w{font-size:9px}.sprig-e{font-size:13px}.seat.bottom:before,.seat.bottom::after{top:3px;font-size:10px;letter-spacing:5px}.seat.bottom:before{left:19%}}
 @media(prefers-reduced-motion:reduce){.river-item.entering .discard-bloom,.river-item.entering:has(.discard-bloom):before,.seat:has(.draw-chip) .draw-chip:after{animation:none;display:none}}
+
+/* 2026-11-06 v37: guide phones into the existing landscape game layout. */
+#landscape-guide{display:none}
+@media(max-width:700px) and (orientation:portrait){
+  body.game-active{overflow:hidden}
+  body.game-active #landscape-guide{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));min-height:100dvh;background:radial-gradient(circle at 50% 35%,#f5fbe7,#d6edbe 78%);overflow:auto}
+  .landscape-guide-card{width:min(100%,370px);padding:26px 22px;text-align:center;border:3px solid #a9c494;border-radius:30px;background:#fffdf1;box-shadow:0 12px 30px #6c8d6540}
+  .landscape-guide-art{display:block;margin-bottom:12px;color:#76a883;font-size:44px;letter-spacing:.1em;line-height:1.2}
+  .landscape-guide-card h1{margin:0 0 10px;color:#3b6950;font-size:24px}
+  .landscape-guide-card p{margin:0 0 20px;color:#5d6d56;font-size:15px;line-height:1.65}
+  .landscape-guide-card button{min-height:48px;padding:10px 22px}
+  .landscape-guide-card small{display:block;margin-top:14px;color:#6a765e;font-size:12px;line-height:1.5}
+}
+@media(orientation:landscape) and (max-width:740px) and (max-height:560px){
+  .board{grid-template-columns:minmax(84px,.7fr) minmax(320px,4fr) minmax(84px,.7fr)}
+  .seat.bottom .hand-row .tile{width:clamp(29px,4.7vw,35px)}
+  .seat.bottom .hand-holder{width:calc(14 * clamp(29px,4.7vw,35px) + 52px)}
+}
+@media(orientation:landscape) and (max-height:390px){
+  body.game-active .app-shell{height:100dvh;min-height:0;overflow:hidden}
+  body.game-active .board{min-height:0;grid-template-rows:42px minmax(120px,1fr) 80px}
+  body.game-active .center-area{grid-template-rows:40px minmax(42px,1fr) 40px}
+}

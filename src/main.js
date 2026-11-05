@@ -464,6 +464,7 @@ function animateResultScore() {
 }
 
 function render() {
+  document.body.classList.toggle('game-active', !!state);
   const nextTurnKey = state?.phase === 'turn' && state.current === 0 ? `${state.round}:${state.events.length}` : '';
   if (nextTurnKey !== turnReminderKey) {
     if (turnReminderTimer) clearTimeout(turnReminderTimer);
@@ -937,6 +938,16 @@ app.addEventListener('click', event => {
 
 if (typeof window !== 'undefined') window.addEventListener('resize', () => { if (state) render(); });
 render();
+document.getElementById('landscape-start')?.addEventListener('click', async () => {
+  const feedback = document.getElementById('landscape-feedback');
+  try {
+    if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen();
+    if (!screen.orientation?.lock) throw new Error('orientation lock unavailable');
+    await screen.orientation.lock('landscape');
+  } catch {
+    feedback.textContent = '当前浏览器无法自动旋转。请关闭竖屏锁定，并手动横置手机。';
+  }
+});
 if (typeof window !== 'undefined') {
   if ('requestIdleCallback' in window) requestIdleCallback(preloadVictoryArt, { timeout: 1500 });
   else setTimeout(preloadVictoryArt, 300);
