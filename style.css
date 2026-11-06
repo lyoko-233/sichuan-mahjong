@@ -566,3 +566,19 @@
   body.game-active .board{min-height:0;grid-template-rows:42px minmax(120px,1fr) 80px}
   body.game-active .center-area{grid-template-rows:40px minmax(42px,1fr) 40px}
 }
+
+/* 2026-11-06 v38: mobile controls, tile labels, and one persistent wall notice. */
+.topbar{padding-inline-start:max(12px,env(safe-area-inset-left));padding-inline-end:max(12px,env(safe-area-inset-right))}
+.seat.bottom .hand-row .tile{position:relative;z-index:1}
+.seat.bottom .hand-row .tile.drawn,.seat.bottom .hand-row .tile.selected{z-index:3}
+.seat.bottom .hand-row .tile.drawn::after{top:2px;left:2px;right:auto;z-index:5;line-height:1.1}
+.seat.bottom .tile.lack-tile .lack-mark{top:auto;bottom:2px;right:2px;z-index:5;line-height:1.1}
+.reaction-dock,.reaction-dock.from-1{left:auto;right:12px;max-width:calc(100% - 24px)}
+.reaction-dock .actionbar{flex-wrap:nowrap;justify-content:flex-end;min-width:0}
+.reaction-dock .actionbar button{flex:0 1 auto;white-space:nowrap}
+#wall-notice-overlay[hidden]{display:none}
+@media(orientation:landscape) and (max-height:560px){
+  .reaction-dock,.reaction-dock.from-1{right:8px;max-width:calc(100% - 16px);padding:3px 4px}
+  .reaction-dock .actionbar{gap:3px}
+  .reaction-dock .actionbar button{min-width:40px;min-height:38px;padding:3px 5px;font-size:13px}
+}

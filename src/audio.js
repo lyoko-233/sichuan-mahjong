@@ -19,20 +19,13 @@ try {
 
 const music = new Audio(`./audio/${tracks[audioSettings.track]}`);
 music.loop = true;
-music.preload = 'metadata';
-const effects = Object.fromEntries(Object.entries(sounds).map(([key, file]) => {
-  const sound = new Audio(`./audio/${file}`);
-  sound.preload = 'auto';
-  return [key, sound];
-}));
-const voices = Object.fromEntries(Object.entries(roleSounds).map(([role, clips]) => [role,
-  Object.fromEntries(Object.entries(clips).map(([key, file]) => {
-    const sound = new Audio(`./audio/${file}`);
-    sound.preload = 'auto';
-    return [key, sound];
-  }))
-]));
+music.preload = 'auto';
 let playing = false;
+let context = null;
+const buffers = new Map();
+const loads = new Map();
+const fallback = new Map();
+const clipFiles = [...new Set([...Object.values(sounds), ...Object.values(roleSounds).flatMap(clips => Object.values(clips))])];
 
 function save() {
   try { localStorage.setItem(storageKey, JSON.stringify(audioSettings)); } catch { /* 同上 */ }
@@ -40,17 +33,65 @@ function save() {
 
 function syncVolume() {
   music.volume = audioSettings.master * audioSettings.music / 10000;
-  Object.values(effects).forEach(sound => { sound.volume = audioSettings.master * audioSettings.game / 10000; });
-  Object.entries(voices).forEach(([role, clips]) => Object.entries(clips).forEach(([key, sound]) => {
-    sound.volume = Math.min(1, audioSettings.master * audioSettings.game / 10000 * (role === '吉伊' && key === 'meld' ? 1.5 : 1));
-  }));
+}
+
+function tryMusic() {
+  if (playing && !document.hidden && music.paused) music.play().catch(() => {});
+}
+
+function loadClip(file) {
+  if (!context) return Promise.resolve(null);
+  if (buffers.has(file)) return Promise.resolve(buffers.get(file));
+  if (!loads.has(file)) {
+    loads.set(file, fetch(`./audio/${file}`)
+      .then(response => { if (!response.ok) throw new Error(`Audio ${response.status}`); return response.arrayBuffer(); })
+      .then(bytes => context.decodeAudioData(bytes))
+      .then(buffer => { buffers.set(file, buffer); return buffer; })
+      .catch(() => null));
+  }
+  return loads.get(file);
+}
+
+function unlockAudio() {
+  if (!context) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      context = new AudioContextClass();
+      clipFiles.forEach(loadClip);
+    }
+  }
+  if (context?.state === 'suspended') context.resume().catch(() => {});
+  tryMusic();
+}
+
+function playClip(file, boost = 1) {
+  if (!file || !playing || document.hidden || !audioSettings.master || !audioSettings.game) return;
+  if (!context) unlockAudio();
+  if (context) {
+    if (context.state === 'suspended') context.resume().catch(() => {});
+    loadClip(file).then(buffer => {
+      if (!buffer || context.state !== 'running' || document.hidden) return;
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      gain.gain.value = Math.min(1, audioSettings.master * audioSettings.game / 10000 * boost);
+      source.buffer = buffer;
+      source.connect(gain).connect(context.destination);
+      source.start();
+    });
+    return;
+  }
+  if (!fallback.has(file)) fallback.set(file, new Audio(`./audio/${file}`));
+  const sound = fallback.get(file);
+  sound.volume = Math.min(1, audioSettings.master * audioSettings.game / 10000 * boost);
+  sound.currentTime = 0;
+  sound.play().catch(() => {});
 }
 
 syncVolume();
 
 export function startMusic() {
   playing = true;
-  if (!document.hidden) music.play().catch(() => {});
+  tryMusic();
 }
 
 export function selectMusic(track) {
@@ -61,7 +102,7 @@ export function selectMusic(track) {
   music.load();
   syncVolume();
   save();
-  if (playing && !document.hidden) music.play().catch(() => {});
+  tryMusic();
 }
 
 export function setAudioVolume(key, value) {
@@ -69,32 +110,25 @@ export function setAudioVolume(key, value) {
   audioSettings[key] = Math.max(0, Math.min(100, Number(value) || 0));
   syncVolume();
   save();
+  tryMusic();
 }
 
 export function playTileSound(key) {
-  const sound = effects[key];
-  if (!sound || !playing || document.hidden) return;
-  sound.currentTime = 0;
-  sound.play().catch(() => {});
+  playClip(sounds[key]);
 }
 
 export function playRoleSound(role, key) {
-  const sound = voices[role]?.[key];
-  if (!sound || !playing || document.hidden) return;
-  sound.currentTime = 0;
-  sound.play().catch(() => {});
+  playClip(roleSounds[role]?.[key], role === '吉伊' && key === 'meld' ? 1.5 : 1);
 }
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) music.pause();
-  else if (playing) music.play().catch(() => {});
+  else { tryMusic(); if (context?.state === 'suspended') context.resume().catch(() => {}); }
 });
-
+window.addEventListener('pageshow', tryMusic);
+window.addEventListener('focus', tryMusic);
+document.addEventListener('pointerdown', unlockAudio);
+document.addEventListener('touchend', unlockAudio);
+document.addEventListener('click', unlockAudio);
+document.addEventListener('keydown', unlockAudio);
 startMusic();
-function unlockMusic() {
-  startMusic();
-  document.removeEventListener('pointerdown', unlockMusic);
-  document.removeEventListener('keydown', unlockMusic);
-}
-document.addEventListener('pointerdown', unlockMusic);
-document.addEventListener('keydown', unlockMusic);

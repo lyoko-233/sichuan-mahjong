@@ -1,7 +1,7 @@
 import { SUITS, tileSuit, tileRank, tileName, discardHints } from './rules.js?v=21';
 import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=21';
 import { chooseAiAction } from './ai.js?v=21';
-import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=30';
+import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=38';
 
 const app = document.querySelector('#app');
 const roleNames = ['吉伊', '小八', '乌萨奇', '小飞鼠'];
@@ -45,6 +45,7 @@ let dragGhost = null;
 let aiPauseUntil = 0;
 let promptKey = '';
 let promptEntering = false;
+let ignoredKongPromptKey = '';
 let countsOpen = false;
 let countsSuit = 0;
 let wallNotice = false;
@@ -354,14 +355,19 @@ function countsPanel() {
 
 function actionBar() {
   const actions = getLegalActions(state, 0);
-  if (state.phase === 'turn' && state.current === 0) return actions.filter(a => a.type !== 'discard').map(a => {
-    if (a.type === 'hu') return '<button class="hu" data-play="hu">胡</button>';
-    if (a.type === 'concealedKong') return `<button class="gang" data-play="concealedKong" data-tile="${a.tile}">暗杠 ${tileName(a.tile)}</button>`;
-    return `<button class="gang" data-play="addKong" data-tile="${a.tile}" data-meld-index="${a.meldIndex}">补杠 ${tileName(a.tile)}</button>`;
-  }).join('');
+  if (state.phase === 'turn' && state.current === 0) {
+    const kongKey = `${state.round}:${state.events.length}`;
+    const available = actions.filter(a => a.type !== 'discard' && (ignoredKongPromptKey !== kongKey || !['concealedKong', 'addKong'].includes(a.type)));
+    const hasKong = available.some(a => ['concealedKong', 'addKong'].includes(a.type));
+    return available.map(a => {
+      if (a.type === 'hu') return '<button class="hu" data-play="hu">胡</button>';
+      if (a.type === 'concealedKong') return `<button class="gang" data-play="concealedKong" data-tile="${a.tile}">暗杠 ${tileName(a.tile)}</button>`;
+      return `<button class="gang" data-play="addKong" data-tile="${a.tile}" data-meld-index="${a.meldIndex}">补杠 ${tileName(a.tile)}</button>`;
+    }).join('') + (hasKong ? '<button class="pass" data-action="ignore-kong">忽略</button>' : '');
+  }
   if (state.phase === 'reaction') return actions.map(a => {
     const cls = { hu: 'hu', pung: 'peng', directKong: 'gang', pass: 'pass' }[a.type];
-    const text = { hu: '胡', pung: '碰', directKong: `杠 ${tileName(state.pending.tile)}`, pass: '过' }[a.type];
+    const text = { hu: '胡', pung: '碰', directKong: `杠 ${tileName(state.pending.tile)}`, pass: '忽略' }[a.type];
     return `<button class="${cls}" data-play="${a.type}">${text}</button>`;
   }).join('');
   return '';
@@ -430,14 +436,14 @@ function boardHtml() {
   const myTurn = state.phase === 'turn' && state.current === 0;
   const handNotice = errorText === '先把缺牌出完' ? '' : errorText;
   const reactionTypes = state.phase === 'reaction' ? actions.filter(action => ['hu', 'pung', 'directKong'].includes(action.type)).map(action => ({ hu: '胡', pung: '碰', directKong: '杠' })[action.type]) : [];
-  const ownTypes = state.phase === 'turn' && myTurn ? actions.filter(action => ['hu', 'concealedKong', 'addKong'].includes(action.type)).map(action => action.type === 'hu' ? '胡' : '杠') : [];
+  const ownTypes = state.phase === 'turn' && myTurn ? actions.filter(action => action.type === 'hu' || (ignoredKongPromptKey !== `${state.round}:${state.events.length}` && ['concealedKong', 'addKong'].includes(action.type))).map(action => action.type === 'hu' ? '胡' : '杠') : [];
   const promptTypes = [...new Set([...reactionTypes, ...ownTypes])];
   const actingSeat = state.phase === 'turn' ? state.current : state.phase === 'reaction' ? state.pending?.from : null;
   const actingName = actingSeat === null || actingSeat === undefined ? '等待出牌' : `${actingSeat === 0 ? '你' : state.players[actingSeat].name}出牌`;
   const turnDirection = actingSeat === null || actingSeat === undefined ? '' : ['south', 'east', 'north', 'west'][actingSeat];
   return `<div class="app-shell"><header class="topbar"><button class="pill count-trigger" data-action="counts" aria-label="查看余牌统计">◉ 记牌</button><div class="top-meta"><button class="pill settings-trigger" data-action="settings" aria-label="对局设置">⚙ 设置</button></div></header>
-    <div class="board ${myTurn ? 'my-turn' : ''}"><span class="board-flower flower-nw" aria-hidden="true">✿</span><span class="board-flower flower-ne" aria-hidden="true">✿</span><span class="board-flower flower-sw" aria-hidden="true">✿</span><span class="board-flower flower-se" aria-hidden="true">✿</span><span class="board-sprig sprig-n" aria-hidden="true">☁ ♧</span><span class="board-sprig sprig-w" aria-hidden="true">✿</span><span class="board-sprig sprig-e" aria-hidden="true">☁</span>${seatHtml(2, 'top')}${seatHtml(3, 'left')}<section class="center-area">${drawFlightHtml()}${riverHtml(2, 'north')}${riverHtml(3, 'west')}<div class="center-hub"><div class="table-status ${state.wall.length <= 10 ? 'wall-low' : ''}" aria-label="${actingName}" aria-live="polite"><span class="table-wind north${turnDirection === 'north' ? ' active' : ''}">北</span><span class="table-wind east${turnDirection === 'east' ? ' active' : ''}">东</span><span class="table-wind south${turnDirection === 'south' ? ' active' : ''}">南</span><span class="table-wind west${turnDirection === 'west' ? ' active' : ''}">西</span><span class="table-round">第 ${state.round}/4 副</span><strong class="table-remaining">余 ${state.wall.length} 张</strong>${turnDirection ? `<span class="turn-light ${turnDirection}" aria-hidden="true"></span>` : ''}</div></div>${riverHtml(1, 'east')}${riverHtml(0, 'south')}${wallNotice ? '<div class="wall-notice" role="status"><span class="wall-petal" aria-hidden="true">✿</span><strong>余 <em>10</em> 张</strong></div>' : ''}</section>${seatHtml(1, 'right')}${eventToast ? `<div class="event-toast" aria-live="polite">${eventToast}</div>` : ''}
-    <section data-role="${seats[0]}" class="seat bottom ${myTurn ? 'current' : ''} ${state.roundWins.some(win => win.seat === 0) ? 'won' : ''} ${exchangeReveal ? 'exchanging' : ''}"><img class="hand-frame" src="${decoration(seats[0], '手牌外框')}" alt=""><div class="hand-mascot"><img class="mascot-open" src="${decoration(seats[0], '睁眼角色')}" alt=""><img class="mascot-blink" src="${decoration(seats[0], '眨眼角色')}" alt=""></div><div class="hand-top"><span>${seats[0]}　<strong class="seat-score"><span data-score-seat="0">${scoreValue(0)}</span> 分${scoreEffectHtml(0)}</strong>${handNotice ? `<span class="hand-notice">${handNotice}</span>` : ''}</span>${promptTypes.length ? `<div class="reaction-dock from-${state.phase === 'reaction' ? state.pending?.from : 0} ${promptEntering ? 'arriving' : ''}"><span class="reaction-callout" aria-live="assertive">可${promptTypes.join(' · ')}</span><div class="actionbar">${actionBar()}</div></div>` : ''}</div><div class="bottom-main">${player.lack === null ? '' : `<span class="lack-flag">缺${SUITS[player.lack]}</span>`}<div class="hand-holder"><div class="hand-row">${hand}</div></div>${meldsHtml(0)}${winMarkHtml(0)}</div></section>${phasePanel}<div class="hint-card board-hint" id="hint">${hintHtml(selectedDiscard === null ? null : player.hand[selectedDiscard])}</div></div></div>`;
+    <div class="board ${myTurn ? 'my-turn' : ''}"><span class="board-flower flower-nw" aria-hidden="true">✿</span><span class="board-flower flower-ne" aria-hidden="true">✿</span><span class="board-flower flower-sw" aria-hidden="true">✿</span><span class="board-flower flower-se" aria-hidden="true">✿</span><span class="board-sprig sprig-n" aria-hidden="true">☁ ♧</span><span class="board-sprig sprig-w" aria-hidden="true">✿</span><span class="board-sprig sprig-e" aria-hidden="true">☁</span>${seatHtml(2, 'top')}${seatHtml(3, 'left')}<section class="center-area">${drawFlightHtml()}${riverHtml(2, 'north')}${riverHtml(3, 'west')}<div class="center-hub"><div class="table-status ${state.wall.length <= 10 ? 'wall-low' : ''}" aria-label="${actingName}" aria-live="polite"><span class="table-wind north${turnDirection === 'north' ? ' active' : ''}">北</span><span class="table-wind east${turnDirection === 'east' ? ' active' : ''}">东</span><span class="table-wind south${turnDirection === 'south' ? ' active' : ''}">南</span><span class="table-wind west${turnDirection === 'west' ? ' active' : ''}">西</span><span class="table-round">第 ${state.round}/4 副</span><strong class="table-remaining">余 ${state.wall.length} 张</strong>${turnDirection ? `<span class="turn-light ${turnDirection}" aria-hidden="true"></span>` : ''}</div></div>${riverHtml(1, 'east')}${riverHtml(0, 'south')}</section>${seatHtml(1, 'right')}${eventToast ? `<div class="event-toast" aria-live="polite">${eventToast}</div>` : ''}
+    <section data-role="${seats[0]}" class="seat bottom ${myTurn ? 'current' : ''} ${state.roundWins.some(win => win.seat === 0) ? 'won' : ''} ${exchangeReveal ? 'exchanging' : ''}"><img class="hand-frame" src="${decoration(seats[0], '手牌外框')}" alt=""><div class="hand-mascot"><img class="mascot-open" src="${decoration(seats[0], '睁眼角色')}" alt=""><img class="mascot-blink" src="${decoration(seats[0], '眨眼角色')}" alt=""></div><div class="hand-top"><span>${seats[0]}　<strong class="seat-score"><span data-score-seat="0">${scoreValue(0)}</span> 分${scoreEffectHtml(0)}</strong>${handNotice ? `<span class="hand-notice">${handNotice}</span>` : ''}</span>${promptTypes.length ? `<div class="reaction-dock from-${state.phase === 'reaction' ? state.pending?.from : 0} ${promptEntering ? 'arriving' : ''}"><div class="actionbar">${actionBar()}</div></div>` : ''}</div><div class="bottom-main">${player.lack === null ? '' : `<span class="lack-flag">缺${SUITS[player.lack]}</span>`}<div class="hand-holder"><div class="hand-row">${hand}</div></div>${meldsHtml(0)}${winMarkHtml(0)}</div></section>${phasePanel}<div class="hint-card board-hint" id="hint">${hintHtml(selectedDiscard === null ? null : player.hand[selectedDiscard])}</div></div></div>`;
 }
 
 function animateResultScore() {
@@ -476,10 +482,12 @@ function render() {
     }, 8000) : null;
   }
   const promptActions = state ? getLegalActions(state, 0).filter(action => ['hu', 'pung', 'directKong', 'concealedKong', 'addKong'].includes(action.type)) : [];
-  const nextPromptKey = promptActions.length ? `${state.round}/${state.phase}/${state.wall.length}/${state.pending?.from ?? ''}/${state.pending?.tile ?? ''}/${promptActions.map(action => `${action.type}:${action.tile ?? ''}`).join(',')}` : '';
+  const visiblePromptActions = promptActions.filter(action => state.phase !== 'turn' || ignoredKongPromptKey !== `${state.round}:${state.events.length}` || !['concealedKong', 'addKong'].includes(action.type));
+  const nextPromptKey = visiblePromptActions.length ? `${state.round}/${state.phase}/${state.wall.length}/${state.pending?.from ?? ''}/${state.pending?.tile ?? ''}/${visiblePromptActions.map(action => `${action.type}:${action.tile ?? ''}`).join(',')}` : '';
   promptEntering = !!nextPromptKey && nextPromptKey !== promptKey;
   promptKey = nextPromptKey;
   app.innerHTML = state ? boardHtml() : setupHtml();
+  document.getElementById('wall-notice-overlay').hidden = !wallNotice;
   animateResultScore();
   if (errorText === '先把缺牌出完') {
     const seat = app.querySelector('.seat.bottom');
@@ -814,6 +822,7 @@ app.addEventListener('click', event => {
   if (target.dataset.configCap !== undefined) { prefs.maxHuScore = target.dataset.configCap === 'unlimited' ? null : Number(target.dataset.configCap); return render(); }
   if (target.dataset.action === 'resume' && savedGame) {
     startMusic();
+    ignoredKongPromptKey = '';
     clearScoreEffects();
     Object.assign(prefs, savedGame.prefs);
     state = savedGame.state;
@@ -838,6 +847,7 @@ app.addEventListener('click', event => {
   if (target.dataset.action === 'close-rules') { rulesOpen = false; settingsOpen = !!state; render(); return scheduleAi(); }
   if (target.dataset.action === 'start') {
     startMusic();
+    ignoredKongPromptKey = '';
     clearScoreEffects();
     effect = null;
     moveEnter = false;
@@ -863,7 +873,7 @@ app.addEventListener('click', event => {
     if (wallTimer) clearTimeout(wallTimer);
     if (resultTimer) clearTimeout(resultTimer);
     if (resultVoiceTimer) clearTimeout(resultVoiceTimer);
-    autoTimer = null; effectTimer = null; revealTimer = null; drawTimer = null; moveTimer = null; eventTimer = null; wallTimer = null; resultTimer = null; resultVoiceTimer = null; eventToast = null; wallNotice = false; wallNoticeShown = false; roundEnding = false; resultPageIndex = 0; moveEnter = false; drawCue = null; effect = null; exchangeReveal = null; settingsOpen = false; rulesOpen = false; historyOpen = false; countsOpen = false; riverZoomSeat = null; riverZoomIndex = null; aiPauseUntil = 0; state = null;
+    autoTimer = null; effectTimer = null; revealTimer = null; drawTimer = null; moveTimer = null; eventTimer = null; wallTimer = null; resultTimer = null; resultVoiceTimer = null; eventToast = null; wallNotice = false; wallNoticeShown = false; ignoredKongPromptKey = ''; roundEnding = false; resultPageIndex = 0; moveEnter = false; drawCue = null; effect = null; exchangeReveal = null; settingsOpen = false; rulesOpen = false; historyOpen = false; countsOpen = false; riverZoomSeat = null; riverZoomIndex = null; aiPauseUntil = 0; state = null;
     clearSavedGame();
     setupStep = 'mode';
     return render();
@@ -884,6 +894,7 @@ app.addEventListener('click', event => {
   if (target.dataset.action === 'history') { settingsOpen = false; historyOpen = true; render(); return scheduleAi(); }
   if (target.dataset.action === 'close-panel') { settingsOpen = false; historyOpen = false; render(); return scheduleAi(); }
   if (target.dataset.action === 'hint-more') { hintExpanded = !hintExpanded; return render(); }
+  if (target.dataset.action === 'ignore-kong') { ignoredKongPromptKey = `${state.round}:${state.events.length}`; return render(); }
   if (target.dataset.action === 'speed') {
     prefs.speed = prefs.speed === 'fast' ? 'normal' : 'fast';
     saveGame(); render(); return scheduleAi();
