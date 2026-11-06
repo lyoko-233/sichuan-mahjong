@@ -615,3 +615,20 @@
   .reaction-dock .actionbar button{border-radius:10px}
 }
 @media(prefers-reduced-motion:reduce){.seat.bottom .hand-row .tile.ting-glow:not(.selected)::before{animation:none;opacity:.55}}
+
+/* 2026-11-06 v41: start-of-round hand reveal and broader listening glow. */
+.seat.bottom .hand-row .tile.ting-glow:not(.selected)::before{inset:-8px;border:3px solid #e9b75ba8;border-radius:12px;background:radial-gradient(ellipse,#ffd47672 20%,#ffe6a44d 58%,transparent 78%);box-shadow:0 0 10px 4px #eebd6194,0 0 20px 7px #ffe3a460}
+@keyframes ting-breath{0%,100%{opacity:.38;transform:scale(.95)}50%{opacity:.88;transform:scale(1.045)}}
+body.opening .seat.bottom .hand-row{perspective:700px}
+.opening-tile{position:relative;flex:none;width:clamp(35px,3.7vw,52px);height:clamp(49px,5.2vw,70px);transform-style:preserve-3d;animation:opening-tile-rise 1.25s cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(var(--tile-order) * 24ms)}
+.opening-tile.dealer-extra{margin-left:17px}
+.opening-back,.opening-face{position:absolute;inset:0;display:block;backface-visibility:hidden}
+.opening-face{transform:rotateY(0)}
+.opening-back{transform:rotateY(180deg);border:2px solid #4a907f;border-radius:7px;background:#74b9a9 url('./assets/tile-back-north-v2.png') center/cover;box-shadow:2px 3px 0 #3e8e7e,0 5px 8px #4f71595c}
+.seat.bottom .hand-row .opening-tile .tile{width:100%;height:100%}
+@keyframes opening-tile-rise{0%,23%{transform:translateY(8px) rotateX(68deg) rotateY(180deg)}68%{transform:translateY(-7px) rotateX(0) rotateY(0)}100%{transform:translateY(0) rotateX(0) rotateY(0)}}
+body.opening .seat:not(.bottom) .backs{animation:opening-rack 1.4s ease-out both}
+@keyframes opening-rack{from{opacity:.55;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@media(orientation:landscape) and (max-height:560px){.opening-tile{width:clamp(29px,4.7vw,35px);height:49px}}
+@media(orientation:landscape) and (max-height:390px){.opening-tile{height:47px}}
+@media(prefers-reduced-motion:reduce){.opening-tile,body.opening .seat:not(.bottom) .backs{animation:none}.opening-tile{transform:none}}

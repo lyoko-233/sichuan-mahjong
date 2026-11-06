@@ -1,7 +1,7 @@
 import { SUITS, tileSuit, tileRank, tileName, discardHints } from './rules.js?v=21';
 import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=21';
 import { chooseAiAction } from './ai.js?v=21';
-import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=39';
+import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=41';
 
 const app = document.querySelector('#app');
 const roleNames = ['吉伊', '小八', '乌萨奇', '小飞鼠'];
@@ -70,6 +70,8 @@ let turnReminderVisible = false;
 let tingReminderKey = '';
 let tingReminderTimer = null;
 let tingReminderVisible = false;
+let opening = false;
+let openingTimer = null;
 
 try {
   guideSeen = localStorage.getItem(guideKey) === 'seen';
@@ -200,12 +202,15 @@ function riverHtml(seat, position) {
   const p = state.players[seat];
   const focus = focusedMove();
   const recent = p.discards.filter(discard => !discard.claimed);
-  const capacity = typeof window !== 'undefined' && window.innerWidth >= 1100 && window.innerHeight >= 650 ? 18 : 12;
+  const wide = typeof window !== 'undefined' && window.innerWidth >= 1100 && window.innerHeight >= 650;
+  const mobileHorizontal = typeof window !== 'undefined' && window.innerWidth <= 900 && window.innerWidth > window.innerHeight && window.innerHeight <= 560 && (seat === 0 || seat === 2);
+  const columns = mobileHorizontal ? 7 : 6;
+  const capacity = wide ? 18 : mobileHorizontal ? 14 : 12;
   const visible = recent.slice(-capacity);
-  const rows = Array.from({ length: capacity / 6 }, (_, row) => Array.from({ length: 6 }, (_, column) => {
-    const discard = visible[row * 6 + column];
+  const rows = Array.from({ length: capacity / columns }, (_, row) => Array.from({ length: columns }, (_, column) => {
+    const discard = visible[row * columns + column];
     if (!discard) return '<span class="river-empty" aria-hidden="true"></span>';
-    const latest = focus?.kind !== 'robKong' && focus?.from === seat && row * 6 + column === visible.length - 1 && discard.tile === focus.tile;
+    const latest = focus?.kind !== 'robKong' && focus?.from === seat && row * columns + column === visible.length - 1 && discard.tile === focus.tile;
     return `<div class="river-item ${latest ? 'latest' : ''} ${latest && moveEnter ? 'entering' : ''}">${tileHtml(discard.tile, { mini: true, latest })}${latest && moveEnter ? `<span class="discard-badge"><img src="${avatar(seats[seat])}" alt="">${p.name}</span><span class="discard-bloom" aria-hidden="true">✧</span>` : ''}</div>`;
   }).join(''));
   return `<div class="river-zone river-${position}" data-river-seat="${seat}" role="button" tabindex="0" aria-label="放大查看${p.name}的牌河，共 ${p.discards.length} 张"><div class="river-tiles">${rows.map(row => `<div class="river-row">${row}</div>`).join('')}</div>${recent.length > visible.length ? `<span class="river-overflow">+${recent.length - visible.length}</span>` : ''}</div>`;
@@ -436,8 +441,10 @@ function boardHtml() {
     handOrder.splice(drawnLack || firstLack < 0 ? handOrder.length : firstLack, 0, drawn);
   }
   const tingTiles = new Set(tingReminderVisible && myTurn ? discardHints(player).map(hint => hint.discard) : []);
-  const hand = handOrder.map(({ tile, index }) => tileHtml(tile, { index, selected: selectedDiscard === index, available: state.phase === 'turn' && state.current === 0 && discards.has(tile), drawn: index === drawnIndex, lack: player.lack !== null && tileSuit(tile) === player.lack, entering: drawCue?.seat === 0 && index === drawnIndex }).replace('class="tile ', `class="tile ${tingTiles.has(tile) ? 'ting-glow ' : ''}`)).join('');
-  const phasePanel = riverZoomSeat !== null ? riverZoomPanel() : rulesOpen ? rulesPanel() : settingsOpen ? settingsPanel() : historyOpen ? historyPanel() : countsOpen ? countsPanel() : exchangeReveal ? exchangeRevealPanel() : state.phase === 'exchange' ? exchangePanel() : state.phase === 'dingque' ? lackPanel() : ['roundEnd', 'matchEnd'].includes(state.phase) ? roundEnding ? roundEndBanner() : resultPanel() : '';
+  const hand = handOrder.map(({ tile, index }, position) => opening
+    ? `<div class="opening-tile ${index === drawnIndex ? 'dealer-extra' : ''}" style="--tile-order:${position}" aria-hidden="true"><span class="opening-back"></span><span class="opening-face">${tileHtml(tile)}</span></div>`
+    : tileHtml(tile, { index, selected: selectedDiscard === index, available: state.phase === 'turn' && state.current === 0 && discards.has(tile), drawn: index === drawnIndex, lack: player.lack !== null && tileSuit(tile) === player.lack, entering: drawCue?.seat === 0 && index === drawnIndex }).replace('class="tile ', `class="tile ${tingTiles.has(tile) ? 'ting-glow ' : ''}`)).join('');
+  const phasePanel = opening ? '' : riverZoomSeat !== null ? riverZoomPanel() : rulesOpen ? rulesPanel() : settingsOpen ? settingsPanel() : historyOpen ? historyPanel() : countsOpen ? countsPanel() : exchangeReveal ? exchangeRevealPanel() : state.phase === 'exchange' ? exchangePanel() : state.phase === 'dingque' ? lackPanel() : ['roundEnd', 'matchEnd'].includes(state.phase) ? roundEnding ? roundEndBanner() : resultPanel() : '';
   const handNotice = errorText === '先把缺牌出完' ? '' : errorText;
   const reactionTypes = state.phase === 'reaction' ? actions.filter(action => ['hu', 'pung', 'directKong'].includes(action.type)).map(action => ({ hu: '胡', pung: '碰', directKong: '杠' })[action.type]) : [];
   const ownTypes = state.phase === 'turn' && myTurn ? actions.filter(action => action.type === 'hu' || (ignoredKongPromptKey !== `${state.round}:${state.events.length}` && ['concealedKong', 'addKong'].includes(action.type))).map(action => action.type === 'hu' ? '胡' : '杠') : [];
@@ -475,6 +482,7 @@ function animateResultScore() {
 
 function render() {
   document.body.classList.toggle('game-active', !!state);
+  document.body.classList.toggle('opening', opening);
   const nextTurnKey = state?.phase === 'turn' && state.current === 0 ? `${state.round}:${state.events.length}` : '';
   if (nextTurnKey !== turnReminderKey) {
     if (turnReminderTimer) clearTimeout(turnReminderTimer);
@@ -556,6 +564,19 @@ function render() {
     });
     if (selectedDiscard !== null) positionHint(app.querySelector(`.seat.bottom .tile[data-tile-index="${selectedDiscard}"]`));
   }
+}
+
+function startOpening() {
+  if (openingTimer) clearTimeout(openingTimer);
+  opening = true;
+  playTileSound('arrange');
+  render();
+  openingTimer = setTimeout(() => {
+    openingTimer = null;
+    opening = false;
+    render();
+    scheduleAi();
+  }, 1750);
 }
 
 function showEffect(previous, events) {
@@ -686,6 +707,7 @@ function commit(seat, action) {
     if (state.phase !== 'exchange') selectedExchange = [];
     if (seat === 0 && action.type === 'discard' && !guideSeen) markGuideSeen();
     saveGame();
+    if (state.round !== previous.round) return startOpening();
     render();
     scheduleAi();
   } catch (error) {
@@ -704,7 +726,7 @@ function nextAiSeat() {
 
 function scheduleAi() {
   if (autoTimer) clearTimeout(autoTimer);
-  if (!state || exchangeReveal) return;
+  if (!state || exchangeReveal || opening) return;
   if (prefs.autoRiver && state.mode === 'river' && state.phase === 'turn' && state.current === 0 && state.players[0].lockedWaits) {
     const actions = getLegalActions(state, 0);
     if (actions.length === 1 && actions[0].type === 'discard') {
@@ -835,6 +857,8 @@ app.addEventListener('click', event => {
   if (target.dataset.configCap !== undefined) { prefs.maxHuScore = target.dataset.configCap === 'unlimited' ? null : Number(target.dataset.configCap); return render(); }
   if (target.dataset.action === 'resume' && savedGame) {
     startMusic();
+    if (openingTimer) clearTimeout(openingTimer);
+    openingTimer = null; opening = false;
     ignoredKongPromptKey = '';
     clearScoreEffects();
     Object.assign(prefs, savedGame.prefs);
@@ -871,12 +895,14 @@ app.addEventListener('click', event => {
     selectedExchange = [];
     selectedDiscard = null;
     saveGame();
-    render();
-    return scheduleAi();
+    return startOpening();
   }
+  if (opening) return;
   if (!state) return;
   if (target.dataset.action === 'reset' || target.dataset.action === 'exit-game') {
     clearScoreEffects();
+    if (openingTimer) clearTimeout(openingTimer);
+    openingTimer = null; opening = false;
     if (autoTimer) clearTimeout(autoTimer);
     if (effectTimer) clearTimeout(effectTimer);
     if (revealTimer) clearTimeout(revealTimer);

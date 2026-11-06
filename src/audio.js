@@ -1,6 +1,6 @@
 const storageKey = 'grass-mahjong-audio-v1';
 const tracks = { A: 'music-a.mp3', D: 'music-d.mp3', E: 'music-e.mp3', F: 'music-f.mp3' };
-const sounds = { draw: 'draw.mp3', discard: 'discard.mp3', pung: 'pung.mp3', kong: 'kong.mp3' };
+const sounds = { draw: 'draw.mp3', discard: 'discard.mp3', pung: 'pung.mp3', kong: 'kong.mp3', arrange: 'arrange-flip.mp3' };
 const roleSounds = {
   '吉伊': { hu: 'chiikawa-hu.mp3', meld: 'chiikawa-meld.mp3' },
   '小八': { hu: 'hachiware-hu.mp3', meld: 'hachiware-meld.mp3' },
