@@ -1,5 +1,5 @@
 import { SUITS, tileSuit, tileRank, tileName, discardHints } from './rules.js?v=21';
-import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=21';
+import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=42';
 import { chooseAiAction } from './ai.js?v=21';
 import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=41';
 
@@ -7,7 +7,7 @@ const app = document.querySelector('#app');
 const roleNames = ['吉伊', '小八', '乌萨奇', '小飞鼠'];
 const modes = { normal: '普通模式', battle: '血战到底', river: '血流成河' };
 const modeNotes = { normal: '首位玩家胡牌后，本副立即结算。', battle: '胡牌者离场；三家胡牌或牌墙耗尽后结算。', river: '胡牌者继续摸打，可再次胡牌；牌墙耗尽后结算。' };
-const modeArt = { normal: '吉伊', battle: '小八', river: '乌萨奇' };
+const modeArt = { normal: '吉伊', battle: '乌萨奇', river: '小八' };
 const difficulties = { easy: '简单', medium: '中等', hard: '困难' };
 const prefs = { mode: 'normal', exchange: true, role: '乌萨奇', difficulty: 'medium', speed: 'normal', autoRiver: false, initialScore: 100, maxHuScore: 32 };
 const saveKey = 'grass-mahjong-save-v1';
@@ -45,7 +45,7 @@ let dragGhost = null;
 let aiPauseUntil = 0;
 let promptKey = '';
 let promptEntering = false;
-let ignoredKongPromptKey = '';
+let ignoredTurnPromptKey = '';
 let countsOpen = false;
 let countsSuit = 0;
 let wallNotice = false;
@@ -364,14 +364,13 @@ function countsPanel() {
 function actionBar() {
   const actions = getLegalActions(state, 0);
   if (state.phase === 'turn' && state.current === 0) {
-    const kongKey = `${state.round}:${state.events.length}`;
-    const available = actions.filter(a => a.type !== 'discard' && (ignoredKongPromptKey !== kongKey || !['concealedKong', 'addKong'].includes(a.type)));
-    const hasKong = available.some(a => ['concealedKong', 'addKong'].includes(a.type));
+    const turnKey = `${state.round}:${state.events.length}`;
+    const available = actions.filter(a => a.type !== 'discard' && ignoredTurnPromptKey !== turnKey);
     return available.map(a => {
       if (a.type === 'hu') return '<button class="hu" data-play="hu">胡</button>';
       if (a.type === 'concealedKong') return `<button class="gang" data-play="concealedKong" data-tile="${a.tile}">暗杠 ${tileName(a.tile)}</button>`;
       return `<button class="gang" data-play="addKong" data-tile="${a.tile}" data-meld-index="${a.meldIndex}">补杠 ${tileName(a.tile)}</button>`;
-    }).join('') + (hasKong ? '<button class="pass" data-action="ignore-kong">忽略</button>' : '');
+    }).join('') + (available.length ? '<button class="pass" data-action="ignore-turn-prompt">忽略</button>' : '');
   }
   if (state.phase === 'reaction') return actions.map(a => {
     const cls = { hu: 'hu', pung: 'peng', directKong: 'gang', pass: 'pass' }[a.type];
@@ -440,14 +439,14 @@ function boardHtml() {
     const firstLack = handOrder.findIndex(item => tileSuit(item.tile) === player.lack);
     handOrder.splice(drawnLack || firstLack < 0 ? handOrder.length : firstLack, 0, drawn);
   }
-  const tingTiles = new Set(tingReminderVisible && myTurn ? discardHints(player).map(hint => hint.discard) : []);
+  const tingTiles = new Set(tingReminderVisible && myTurn && !actions.some(action => action.type === 'hu') ? discardHints(player).map(hint => hint.discard) : []);
   const hand = handOrder.map(({ tile, index }, position) => opening
     ? `<div class="opening-tile ${index === drawnIndex ? 'dealer-extra' : ''}" style="--tile-order:${position}" aria-hidden="true"><span class="opening-back"></span><span class="opening-face">${tileHtml(tile)}</span></div>`
     : tileHtml(tile, { index, selected: selectedDiscard === index, available: state.phase === 'turn' && state.current === 0 && discards.has(tile), drawn: index === drawnIndex, lack: player.lack !== null && tileSuit(tile) === player.lack, entering: drawCue?.seat === 0 && index === drawnIndex }).replace('class="tile ', `class="tile ${tingTiles.has(tile) ? 'ting-glow ' : ''}`)).join('');
   const phasePanel = opening ? '' : riverZoomSeat !== null ? riverZoomPanel() : rulesOpen ? rulesPanel() : settingsOpen ? settingsPanel() : historyOpen ? historyPanel() : countsOpen ? countsPanel() : exchangeReveal ? exchangeRevealPanel() : state.phase === 'exchange' ? exchangePanel() : state.phase === 'dingque' ? lackPanel() : ['roundEnd', 'matchEnd'].includes(state.phase) ? roundEnding ? roundEndBanner() : resultPanel() : '';
   const handNotice = errorText === '先把缺牌出完' ? '' : errorText;
   const reactionTypes = state.phase === 'reaction' ? actions.filter(action => ['hu', 'pung', 'directKong'].includes(action.type)).map(action => ({ hu: '胡', pung: '碰', directKong: '杠' })[action.type]) : [];
-  const ownTypes = state.phase === 'turn' && myTurn ? actions.filter(action => action.type === 'hu' || (ignoredKongPromptKey !== `${state.round}:${state.events.length}` && ['concealedKong', 'addKong'].includes(action.type))).map(action => action.type === 'hu' ? '胡' : '杠') : [];
+  const ownTypes = state.phase === 'turn' && myTurn && ignoredTurnPromptKey !== `${state.round}:${state.events.length}` ? actions.filter(action => ['hu', 'concealedKong', 'addKong'].includes(action.type)).map(action => action.type === 'hu' ? '胡' : '杠') : [];
   const promptTypes = [...new Set([...reactionTypes, ...ownTypes])];
   const actingSeat = state.phase === 'turn' ? state.current : state.phase === 'reaction' ? state.pending?.from : null;
   const actingName = actingSeat === null || actingSeat === undefined ? '等待出牌' : `${actingSeat === 0 ? '你' : state.players[actingSeat].name}出牌`;
@@ -503,7 +502,7 @@ function render() {
     }, 3000) : null;
   }
   const promptActions = state ? getLegalActions(state, 0).filter(action => ['hu', 'pung', 'directKong', 'concealedKong', 'addKong'].includes(action.type)) : [];
-  const visiblePromptActions = promptActions.filter(action => state.phase !== 'turn' || ignoredKongPromptKey !== `${state.round}:${state.events.length}` || !['concealedKong', 'addKong'].includes(action.type));
+  const visiblePromptActions = promptActions.filter(action => state.phase !== 'turn' || ignoredTurnPromptKey !== `${state.round}:${state.events.length}`);
   const nextPromptKey = visiblePromptActions.length ? `${state.round}/${state.phase}/${state.wall.length}/${state.pending?.from ?? ''}/${state.pending?.tile ?? ''}/${visiblePromptActions.map(action => `${action.type}:${action.tile ?? ''}`).join(',')}` : '';
   promptEntering = !!nextPromptKey && nextPromptKey !== promptKey;
   promptKey = nextPromptKey;
@@ -859,7 +858,7 @@ app.addEventListener('click', event => {
     startMusic();
     if (openingTimer) clearTimeout(openingTimer);
     openingTimer = null; opening = false;
-    ignoredKongPromptKey = '';
+    ignoredTurnPromptKey = '';
     clearScoreEffects();
     Object.assign(prefs, savedGame.prefs);
     state = savedGame.state;
@@ -884,7 +883,7 @@ app.addEventListener('click', event => {
   if (target.dataset.action === 'close-rules') { rulesOpen = false; settingsOpen = !!state; render(); return scheduleAi(); }
   if (target.dataset.action === 'start') {
     startMusic();
-    ignoredKongPromptKey = '';
+    ignoredTurnPromptKey = '';
     clearScoreEffects();
     effect = null;
     moveEnter = false;
@@ -912,7 +911,7 @@ app.addEventListener('click', event => {
     if (wallTimer) clearTimeout(wallTimer);
     if (resultTimer) clearTimeout(resultTimer);
     if (resultVoiceTimer) clearTimeout(resultVoiceTimer);
-    autoTimer = null; effectTimer = null; revealTimer = null; drawTimer = null; moveTimer = null; eventTimer = null; wallTimer = null; resultTimer = null; resultVoiceTimer = null; eventToast = null; wallNotice = false; wallNoticeShown = false; ignoredKongPromptKey = ''; roundEnding = false; resultPageIndex = 0; moveEnter = false; drawCue = null; effect = null; exchangeReveal = null; settingsOpen = false; rulesOpen = false; historyOpen = false; countsOpen = false; riverZoomSeat = null; riverZoomIndex = null; aiPauseUntil = 0; state = null;
+    autoTimer = null; effectTimer = null; revealTimer = null; drawTimer = null; moveTimer = null; eventTimer = null; wallTimer = null; resultTimer = null; resultVoiceTimer = null; eventToast = null; wallNotice = false; wallNoticeShown = false; ignoredTurnPromptKey = ''; roundEnding = false; resultPageIndex = 0; moveEnter = false; drawCue = null; effect = null; exchangeReveal = null; settingsOpen = false; rulesOpen = false; historyOpen = false; countsOpen = false; riverZoomSeat = null; riverZoomIndex = null; aiPauseUntil = 0; state = null;
     clearSavedGame();
     setupStep = 'mode';
     return render();
@@ -933,7 +932,7 @@ app.addEventListener('click', event => {
   if (target.dataset.action === 'history') { settingsOpen = false; historyOpen = true; render(); return scheduleAi(); }
   if (target.dataset.action === 'close-panel') { settingsOpen = false; historyOpen = false; render(); return scheduleAi(); }
   if (target.dataset.action === 'hint-more') { hintExpanded = !hintExpanded; return render(); }
-  if (target.dataset.action === 'ignore-kong') { ignoredKongPromptKey = `${state.round}:${state.events.length}`; return render(); }
+  if (target.dataset.action === 'ignore-turn-prompt') { ignoredTurnPromptKey = `${state.round}:${state.events.length}`; return render(); }
   if (target.dataset.action === 'speed') {
     prefs.speed = prefs.speed === 'fast' ? 'normal' : 'fast';
     saveGame(); render(); return scheduleAi();

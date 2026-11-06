@@ -109,7 +109,10 @@ function turnActions(s, seat) {
   const options = [];
   const winTile = p.drawn;
   if (winTile !== null && huResult(s, seat, winTile, true)) options.push({ type: 'hu' });
-  if (options.length && s.wall.length <= 4) return options;
+  if (options.length && s.wall.length <= 4) {
+    for (const tile of legalDiscards(p)) options.push({ type: 'discard', tile });
+    return options;
+  }
   if (s.wall.length) {
     const counts = tileCounts(p.hand);
     for (let tile = 0; tile < 27; tile++) {
