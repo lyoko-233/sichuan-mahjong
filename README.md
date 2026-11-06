@@ -12,7 +12,7 @@
 
 ### [🀄 立即试玩](https://lyoko-233.github.io/sichuan-mahjong/) · [查看源码](https://github.com/lyoko-233/sichuan-mahjong)
 
-无需下载安装 · 手机建议横屏 · 当前游戏版本 **v42**
+无需下载安装 · 手机建议横屏 · 当前游戏版本 
 
 </div>
 
@@ -20,9 +20,7 @@
 
 ## 游戏截图
 
-![第 42 版真实对局截图：四人牌桌、角色信息、牌河与玩家手牌](docs/images/gameplay.webp)
 
-上图来自 v42 游戏实机画面。点击上方「立即试玩」，就能进入自己的牌局。
 
 ## 三种玩法
 
