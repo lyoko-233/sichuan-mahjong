@@ -1,7 +1,7 @@
 import { SUITS, tileSuit, tileRank, tileName, discardHints } from './rules.js?v=21';
 import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=21';
 import { chooseAiAction } from './ai.js?v=21';
-import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=38';
+import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=39';
 
 const app = document.querySelector('#app');
 const roleNames = ['吉伊', '小八', '乌萨奇', '小飞鼠'];
@@ -67,6 +67,9 @@ let scoreFrame = null;
 let turnReminderKey = '';
 let turnReminderTimer = null;
 let turnReminderVisible = false;
+let tingReminderKey = '';
+let tingReminderTimer = null;
+let tingReminderVisible = false;
 
 try {
   guideSeen = localStorage.getItem(guideKey) === 'seen';
@@ -421,6 +424,7 @@ function syncEffect() {
 function boardHtml() {
   const player = state.players[0];
   const actions = getLegalActions(state, 0);
+  const myTurn = state.phase === 'turn' && state.current === 0;
   const discards = new Set(actions.filter(a => a.type === 'discard').map(a => a.tile));
   const handOrder = (exchangeReveal?.oldHand || player.hand).map((tile, index) => ({ tile, index }));
   const drawnIndex = player.drawn === null ? -1 : handOrder.findLastIndex(item => item.tile === player.drawn);
@@ -431,9 +435,9 @@ function boardHtml() {
     const firstLack = handOrder.findIndex(item => tileSuit(item.tile) === player.lack);
     handOrder.splice(drawnLack || firstLack < 0 ? handOrder.length : firstLack, 0, drawn);
   }
-  const hand = handOrder.map(({ tile, index }) => tileHtml(tile, { index, selected: selectedDiscard === index, available: state.phase === 'turn' && state.current === 0 && discards.has(tile), drawn: index === drawnIndex, lack: player.lack !== null && tileSuit(tile) === player.lack, entering: drawCue?.seat === 0 && index === drawnIndex })).join('');
+  const tingTiles = new Set(tingReminderVisible && myTurn ? discardHints(player).map(hint => hint.discard) : []);
+  const hand = handOrder.map(({ tile, index }) => tileHtml(tile, { index, selected: selectedDiscard === index, available: state.phase === 'turn' && state.current === 0 && discards.has(tile), drawn: index === drawnIndex, lack: player.lack !== null && tileSuit(tile) === player.lack, entering: drawCue?.seat === 0 && index === drawnIndex }).replace('class="tile ', `class="tile ${tingTiles.has(tile) ? 'ting-glow ' : ''}`)).join('');
   const phasePanel = riverZoomSeat !== null ? riverZoomPanel() : rulesOpen ? rulesPanel() : settingsOpen ? settingsPanel() : historyOpen ? historyPanel() : countsOpen ? countsPanel() : exchangeReveal ? exchangeRevealPanel() : state.phase === 'exchange' ? exchangePanel() : state.phase === 'dingque' ? lackPanel() : ['roundEnd', 'matchEnd'].includes(state.phase) ? roundEnding ? roundEndBanner() : resultPanel() : '';
-  const myTurn = state.phase === 'turn' && state.current === 0;
   const handNotice = errorText === '先把缺牌出完' ? '' : errorText;
   const reactionTypes = state.phase === 'reaction' ? actions.filter(action => ['hu', 'pung', 'directKong'].includes(action.type)).map(action => ({ hu: '胡', pung: '碰', directKong: '杠' })[action.type]) : [];
   const ownTypes = state.phase === 'turn' && myTurn ? actions.filter(action => action.type === 'hu' || (ignoredKongPromptKey !== `${state.round}:${state.events.length}` && ['concealedKong', 'addKong'].includes(action.type))).map(action => action.type === 'hu' ? '胡' : '杠') : [];
@@ -480,6 +484,15 @@ function render() {
       turnReminderTimer = null;
       if (turnReminderKey === nextTurnKey) { turnReminderVisible = true; render(); }
     }, 8000) : null;
+  }
+  if (nextTurnKey !== tingReminderKey) {
+    if (tingReminderTimer) clearTimeout(tingReminderTimer);
+    tingReminderKey = nextTurnKey;
+    tingReminderVisible = false;
+    tingReminderTimer = nextTurnKey ? setTimeout(() => {
+      tingReminderTimer = null;
+      if (tingReminderKey === nextTurnKey) { tingReminderVisible = true; render(); }
+    }, 3000) : null;
   }
   const promptActions = state ? getLegalActions(state, 0).filter(action => ['hu', 'pung', 'directKong', 'concealedKong', 'addKong'].includes(action.type)) : [];
   const visiblePromptActions = promptActions.filter(action => state.phase !== 'turn' || ignoredKongPromptKey !== `${state.round}:${state.events.length}` || !['concealedKong', 'addKong'].includes(action.type));

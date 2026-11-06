@@ -118,7 +118,7 @@ export function playTileSound(key) {
 }
 
 export function playRoleSound(role, key) {
-  playClip(roleSounds[role]?.[key], role === '吉伊' && key === 'meld' ? 1.5 : 1);
+  playClip(roleSounds[role]?.[key], role === '吉伊' && key === 'meld' ? 1.75 : 1.3);
 }
 
 document.addEventListener('visibilitychange', () => {
