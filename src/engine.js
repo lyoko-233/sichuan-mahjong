@@ -167,7 +167,7 @@ function makeReaction(s, kind, from, tile, meldIndex = -1) {
     const p = s.players[seat];
     const actions = [];
     if (huResult(s, seat, tile, false, kind === 'robKong')) actions.push({ type: 'hu' });
-    if (actions.length && s.wall.length <= 4) { options[seat] = actions; continue; }
+    if (actions.length && s.wall.length <= 4) { options[seat] = [...actions, { type: 'pass' }]; continue; }
     if (kind === 'discard' && !p.lockedWaits && tileSuit(tile) !== p.lack) {
       const count = p.hand.filter(t => t === tile).length;
       if (count >= 3 && s.wall.length) actions.push({ type: 'directKong' });

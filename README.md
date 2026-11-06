@@ -8,15 +8,15 @@
 
 三种玩法 · 四位角色 · 三档 AI 难度
 
-![版本 v42](https://img.shields.io/badge/版本-v42-75a98a) ![网页游戏](https://img.shields.io/badge/网页游戏-即点即玩-f4ca73) ![单机 AI](https://img.shields.io/badge/对战-单机%20AI-f1b9b8)
+![版本 v43](https://img.shields.io/badge/版本-v43-75a98a) ![网页游戏](https://img.shields.io/badge/网页游戏-即点即玩-f4ca73) ![单机 AI](https://img.shields.io/badge/对战-单机%20AI-f1b9b8)
 
 ### [🀄 立即试玩](https://lyoko-233.github.io/sichuan-mahjong/) · [查看源码](https://github.com/lyoko-233/sichuan-mahjong)
 
-无需下载安装 · 手机建议横屏 · 当前游戏版本 
+无需下载安装 · 手机建议横屏 · 当前游戏版本 **v43**
 
 </div>
 
->本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
+> README 修改时间：2026-11-06 21:35（北京时间）。本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
 
 ## 游戏截图
 
@@ -79,9 +79,9 @@ python -m http.server 8000
 
 ## 版本与更新
 
-当前为 **v42**：自摸胡提示增加「忽略」；自摸回合不显示听牌金光；血战到底与血流成河的模式配图已交换。
+当前为 **v43**：牌墙将尽时的点炮胡、抢杠胡提示也提供「忽略」；角色碰杠胡语音的默认播放增益提高。
 
-[查看更新日志](CHANGELOG.md) · [v42 固定版本](https://github.com/lyoko-233/sichuan-mahjong/tree/v42) · [全部历史标签](https://github.com/lyoko-233/sichuan-mahjong/tags)
+[查看更新日志](CHANGELOG.md) · [v43 固定版本](https://github.com/lyoko-233/sichuan-mahjong/tree/v43) · [全部历史标签](https://github.com/lyoko-233/sichuan-mahjong/tags)
 
 ## 版权与致谢
 

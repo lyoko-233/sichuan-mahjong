@@ -1,7 +1,7 @@
 import { SUITS, tileSuit, tileRank, tileName, discardHints } from './rules.js?v=21';
-import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=42';
+import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=43';
 import { chooseAiAction } from './ai.js?v=21';
-import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=41';
+import { audioSettings, startMusic, selectMusic, setAudioVolume, playTileSound, playRoleSound } from './audio.js?v=43';
 
 const app = document.querySelector('#app');
 const roleNames = ['吉伊', '小八', '乌萨奇', '小飞鼠'];
