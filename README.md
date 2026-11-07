@@ -1,3 +1,8 @@
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/语言-中文-167D8D?style=for-the-badge" alt="中文" /></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/Language-English-167D8D?style=for-the-badge" alt="English" /></a>
+</p>
+
 <div align="center">
 
 ![四位角色围绕四川麻将标题的项目横幅](docs/images/banner.webp)
@@ -18,7 +23,7 @@
 
 </div>
 
-> README 修改时间：2026-11-06 22:07（北京时间）。本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
+> README 修改时间：2026-11-07 23:23（北京时间）。双语介绍版本：V1；游戏版本保持 v43。本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
 
 ## 游戏截图
 
