@@ -15,15 +15,15 @@
 - Voice clips for four Chiikawa characters and a selection of background music.
 - Three modes: Standard, Blood Battle, and Bloody River, with an optional tile-tracking aid.
 
-![Version v44](https://img.shields.io/badge/version-v44-75a98a) ![Browser game](https://img.shields.io/badge/browser-play%20now-f4ca73) ![Single-player AI](https://img.shields.io/badge/opponents-AI-f1b9b8)
+![Version v45](https://img.shields.io/badge/version-v45-75a98a) ![Browser game](https://img.shields.io/badge/browser-play%20now-f4ca73) ![Single-player AI](https://img.shields.io/badge/opponents-AI-f1b9b8)
 
 ### [🀄 Play Now](https://lyoko-233.github.io/sichuan-mahjong/) · [Source Code](https://github.com/lyoko-233/sichuan-mahjong)
 
-No installation required · Landscape orientation recommended on mobile · Game version **v44**
+No installation required · Landscape orientation recommended on mobile · Game version **v45**
 
 </div>
 
-> README updated: 2026-11-19 (Beijing time, UTC+8). Bilingual introduction: V1; game version v44. This is a four-player single-player game with three AI opponents. Online multiplayer is not supported. The language buttons switch the README; the game interface is in Chinese.
+> README updated: 2026-11-19 (Beijing time, UTC+8). Bilingual introduction: V1; game version v45. This is a four-player single-player game with three AI opponents. Online multiplayer is not supported. The language buttons switch the README; the game interface is in Chinese.
 
 ## Screenshots
 
@@ -96,7 +96,7 @@ Open `http://localhost:8000` in your browser. Use a local HTTP server to run ES 
 
 ## Version and updates
 
-Current game version: **v44**. Tile faces now use CSS image cropping for mobile compatibility. Tile face and back images are compressed; tile art loads early and readable text tiles remain available if images fail.
+Current game version: **v45**. WeChat visitors receive a dismissible browser recommendation with opening instructions and a copy-link button. Includes the mobile tile-loading improvements from v44.
 
 [Changelog (Chinese)](CHANGELOG.md) · [Fixed v43 version](https://github.com/lyoko-233/sichuan-mahjong/tree/v43) · [All version tags](https://github.com/lyoko-233/sichuan-mahjong/tags)
 

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#dff2c9">
   <title>川麻 · 单机体验</title>
   <link rel="preload" href="./assets/tile-atlas-v44.webp" as="image" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="./style.css?v=44">
+  <link rel="stylesheet" href="./style.css?v=45">
 </head>
 <body>
   <main id="app" aria-live="polite"></main>
@@ -18,8 +18,27 @@
       <p>请关闭手机的竖屏锁定，然后将手机横过来。牌桌会自动切换为横屏布局。</p>
       <button id="landscape-start" class="primary" type="button">尝试全屏横屏</button>
       <small id="landscape-feedback">如果没有自动旋转，请手动横置手机。</small>
+      <p class="wechat-landscape-tip" data-wechat-only hidden>微信内可能无法横屏，建议使用手机浏览器游玩。<button type="button" data-open-browser-guide>查看浏览器打开方法 ↗</button></p>
     </div>
   </aside>
+  <aside id="wechat-browser-guide" class="browser-guide" role="dialog" aria-modal="true" aria-labelledby="wechat-guide-title" hidden>
+    <section class="browser-guide-card">
+      <span class="browser-guide-flower" aria-hidden="true">✿</span>
+      <h2 id="wechat-guide-title">建议使用浏览器游玩</h2>
+      <p>微信内可能无法横屏，或出现图片加载、声音播放不稳定。使用手机浏览器，体验更舒适。</p>
+      <button id="wechat-browser-help" class="primary" type="button">查看浏览器打开方法 ↗</button>
+      <div id="wechat-browser-steps" class="browser-guide-steps" tabindex="-1" hidden>
+        <strong>右上角 ··· ↗</strong>
+        <p>点击微信右上角「···」，选择「在浏览器打开」。如果没有这个选项，请复制下方链接到 Safari、Chrome 或手机自带浏览器。</p>
+      </div>
+      <label for="wechat-game-link">也可以复制游戏链接</label>
+      <input id="wechat-game-link" type="url" readonly aria-label="游戏链接">
+      <button id="wechat-copy-link" class="browser-guide-copy" type="button">复制游戏链接</button>
+      <p id="wechat-copy-feedback" class="browser-guide-feedback" role="status"></p>
+      <button id="wechat-guide-close" class="browser-guide-close" type="button">继续在微信中游玩</button>
+    </section>
+  </aside>
+  <script defer src="./src/browser-guide.js?v=45"></script>
   <script type="module" src="./src/main.js?v=44"></script>
 </body>
 </html>
