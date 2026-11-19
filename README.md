@@ -15,15 +15,15 @@
 - 四位 Chiikawa 角色的原声音效，多首游戏背景音乐自由切换
 - 普通模式、血战到底、血流成河三种玩法，可随时打开辅助记牌
 
-![版本 v45](https://img.shields.io/badge/版本-v45-75a98a) ![网页游戏](https://img.shields.io/badge/网页游戏-即点即玩-f4ca73) ![单机 AI](https://img.shields.io/badge/对战-单机%20AI-f1b9b8)
+![版本 v46](https://img.shields.io/badge/版本-v46-75a98a) ![网页游戏](https://img.shields.io/badge/网页游戏-即点即玩-f4ca73) ![单机 AI](https://img.shields.io/badge/对战-单机%20AI-f1b9b8)
 
 ### [🀄 立即试玩](https://lyoko-233.github.io/sichuan-mahjong/) · [查看源码](https://github.com/lyoko-233/sichuan-mahjong)
 
-无需下载安装 · 手机建议横屏 · 当前游戏版本 **v45**
+无需下载安装 · 手机建议横屏 · 当前游戏版本 **v46**
 
 </div>
 
-> README 修改时间：2026-11-19（北京时间）。双语介绍版本：V1；游戏版本 v45。本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
+> README 修改时间：2026-11-19（北京时间）。双语介绍版本：V1；游戏版本 v46。本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
 
 ## 游戏截图
 
@@ -96,7 +96,7 @@ python -m http.server 8000
 
 ## 版本与更新
 
-当前为 **v45**：微信内打开时建议使用手机浏览器，提供打开方法、复制链接及关闭提示入口；保留 v44 的手机牌面加载优化。
+当前为 **v46**：手机竖屏进入时先提示横屏，横屏后再选择模式和对局设置；微信浏览器打开指引保留在入口。
 
 [查看更新日志](CHANGELOG.md) · [v43 固定版本](https://github.com/lyoko-233/sichuan-mahjong/tree/v43) · [全部历史标签](https://github.com/lyoko-233/sichuan-mahjong/tags)
 

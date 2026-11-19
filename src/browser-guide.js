@@ -42,5 +42,6 @@
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   });
-  openGuide();
+  // v46 · 2026-11-19: portrait phones see the orientation entry first, with a help button.
+  if (!matchMedia('(max-width:700px) and (orientation:portrait)').matches) openGuide();
 })();
