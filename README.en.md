@@ -15,15 +15,15 @@
 - Voice clips for four Chiikawa characters and a selection of background music.
 - Three modes: Standard, Blood Battle, and Bloody River, with an optional tile-tracking aid.
 
-![Version v43](https://img.shields.io/badge/version-v43-75a98a) ![Browser game](https://img.shields.io/badge/browser-play%20now-f4ca73) ![Single-player AI](https://img.shields.io/badge/opponents-AI-f1b9b8)
+![Version v44](https://img.shields.io/badge/version-v44-75a98a) ![Browser game](https://img.shields.io/badge/browser-play%20now-f4ca73) ![Single-player AI](https://img.shields.io/badge/opponents-AI-f1b9b8)
 
 ### [🀄 Play Now](https://lyoko-233.github.io/sichuan-mahjong/) · [Source Code](https://github.com/lyoko-233/sichuan-mahjong)
 
-No installation required · Landscape orientation recommended on mobile · Game version **v43**
+No installation required · Landscape orientation recommended on mobile · Game version **v44**
 
 </div>
 
-> README updated: 2026-11-07 23:23 (Beijing time, UTC+8). Bilingual introduction: V1; game version remains v43. This is a four-player single-player game with three AI opponents. Online multiplayer is not supported. The language buttons switch the README; the game interface is in Chinese.
+> README updated: 2026-11-19 (Beijing time, UTC+8). Bilingual introduction: V1; game version v44. This is a four-player single-player game with three AI opponents. Online multiplayer is not supported. The language buttons switch the README; the game interface is in Chinese.
 
 ## Screenshots
 
@@ -96,7 +96,7 @@ Open `http://localhost:8000` in your browser. Use a local HTTP server to run ES 
 
 ## Version and updates
 
-Current game version: **v43**. The win-on-discard and robbing-a-kong prompts now also offer a “Pass” option when the wall is nearly empty. Default playback gain for character pung, kong, and winning calls has been increased.
+Current game version: **v44**. Tile faces now use CSS image cropping for mobile compatibility. Tile face and back images are compressed; tile art loads early and readable text tiles remain available if images fail.
 
 [Changelog (Chinese)](CHANGELOG.md) · [Fixed v43 version](https://github.com/lyoko-233/sichuan-mahjong/tree/v43) · [All version tags](https://github.com/lyoko-233/sichuan-mahjong/tags)
 

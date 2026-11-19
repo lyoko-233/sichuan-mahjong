@@ -15,15 +15,15 @@
 - 四位 Chiikawa 角色的原声音效，多首游戏背景音乐自由切换
 - 普通模式、血战到底、血流成河三种玩法，可随时打开辅助记牌
 
-![版本 v43](https://img.shields.io/badge/版本-v43-75a98a) ![网页游戏](https://img.shields.io/badge/网页游戏-即点即玩-f4ca73) ![单机 AI](https://img.shields.io/badge/对战-单机%20AI-f1b9b8)
+![版本 v44](https://img.shields.io/badge/版本-v44-75a98a) ![网页游戏](https://img.shields.io/badge/网页游戏-即点即玩-f4ca73) ![单机 AI](https://img.shields.io/badge/对战-单机%20AI-f1b9b8)
 
 ### [🀄 立即试玩](https://lyoko-233.github.io/sichuan-mahjong/) · [查看源码](https://github.com/lyoko-233/sichuan-mahjong)
 
-无需下载安装 · 手机建议横屏 · 当前游戏版本 **v43**
+无需下载安装 · 手机建议横屏 · 当前游戏版本 **v44**
 
 </div>
 
-> README 修改时间：2026-11-07 23:23（北京时间）。双语介绍版本：V1；游戏版本保持 v43。本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
+> README 修改时间：2026-11-19（北京时间）。双语介绍版本：V1；游戏版本 v44。本项目为单机四人游戏，其余三家由 AI 控制，暂不支持在线多人联机。
 
 ## 游戏截图
 
@@ -96,7 +96,7 @@ python -m http.server 8000
 
 ## 版本与更新
 
-当前为 **v43**：牌墙将尽时的点炮胡、抢杠胡提示也提供「忽略」；角色碰杠胡语音的默认播放增益提高。
+当前为 **v44**：麻将牌面改用普通图片裁切，压缩牌面及牌背资源；优先加载牌面，图片失败时显示文字牌兜底。
 
 [查看更新日志](CHANGELOG.md) · [v43 固定版本](https://github.com/lyoko-233/sichuan-mahjong/tree/v43) · [全部历史标签](https://github.com/lyoko-233/sichuan-mahjong/tags)
 

@@ -120,12 +120,27 @@ function preloadVictoryArt() {
   }
 }
 const decoration = (role, part) => `./assets/${role}-${part}透明图.png`;
+// Use a regular CSS image instead of nested SVG image references on mobile WebViews.
+const tileAtlas = new Image();
+const tileAtlasSources = ['./assets/tile-atlas-v44.webp', './assets/tile-atlas.png'];
+let tileAtlasAttempt = 0;
+tileAtlas.onload = () => {
+  document.documentElement.style.setProperty('--tile-atlas', `url("${tileAtlas.src}")`);
+  document.documentElement.classList.add('tile-art-ready');
+};
+tileAtlas.onerror = () => {
+  if (++tileAtlasAttempt < tileAtlasSources.length) tileAtlas.src = tileAtlasSources[tileAtlasAttempt];
+};
+tileAtlas.fetchPriority = 'high';
+tileAtlas.src = tileAtlasSources[0];
+
 function tileHtml(tile, { mini = false, index = null, selected = false, available = false, drawn = false, restricted = false, latest = false, lack = false, entering = false } = {}) {
   const suit = tileSuit(tile);
   const x = 40 + tileRank(tile) * 205 - 205;
   const y = [62, 312, 551][suit];
   const height = [239, 226, 228][suit];
-  return `<div class="tile ${mini ? 'mini' : ''} ${selected ? 'selected' : ''} ${available ? 'available' : ''} ${drawn ? 'drawn' : ''} ${restricted ? 'restricted' : ''} ${latest ? 'latest' : ''} ${lack ? 'lack-tile' : ''} ${entering ? 'entering' : ''}" ${index === null ? '' : `data-tile-index="${index}"`} aria-label="${tileName(tile)}${lack ? '，定缺牌，先打掉' : ''}" title="${tileName(tile)}${lack ? ' · 定缺牌，先打掉' : ''}"><svg viewBox="${x} ${y} 195 ${height}" preserveAspectRatio="none" aria-hidden="true"><image href="./assets/tile-atlas.png" width="1915" height="821"/></svg>${lack ? '<span class="lack-mark">缺</span>' : ''}</div>`;
+  const artStyle = `background-size:${1915 / 195 * 100}% ${821 / height * 100}%;background-position:${x / (1915 - 195) * 100}% ${y / (821 - height) * 100}%`;
+  return `<div class="tile ${mini ? 'mini' : ''} ${selected ? 'selected' : ''} ${available ? 'available' : ''} ${drawn ? 'drawn' : ''} ${restricted ? 'restricted' : ''} ${latest ? 'latest' : ''} ${lack ? 'lack-tile' : ''} ${entering ? 'entering' : ''}" ${index === null ? '' : `data-tile-index="${index}"`} aria-label="${tileName(tile)}${lack ? '，定缺牌，先打掉' : ''}" title="${tileName(tile)}${lack ? ' · 定缺牌，先打掉' : ''}"><span class="tile-face" aria-hidden="true"><span class="tile-fallback suit-${suit}">${tileRank(tile)}<small>${SUITS[suit]}</small></span><span class="tile-art" style="${artStyle}"></span></span>${lack ? '<span class="lack-mark">缺</span>' : ''}</div>`;
 }
 
 function setupHtml() {
