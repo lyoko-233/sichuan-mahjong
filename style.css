@@ -659,3 +659,7 @@ body.opening .seat:not(.bottom) .backs{animation:opening-rack 1.4s ease-out both
 .browser-guide-feedback:empty{display:none}
 .browser-guide-card .browser-guide-close{margin-top:16px;background:transparent;border:0;box-shadow:none;color:#65775f;font-size:13px;text-decoration:underline;text-underline-offset:4px}
 .wechat-landscape-tip button{margin-top:8px;width:100%;font-size:14px}
+/* 2026-11-19 v47: leave room for raised exchange tiles and their selection glow. */
+.exchange-panel .hand-row{position:relative;overflow:visible;padding:22px 6px 12px;isolation:isolate}
+.exchange-panel .hand-row .tile{position:relative;z-index:1}
+.exchange-panel .hand-row .tile.selected{z-index:3}

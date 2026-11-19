@@ -1,3 +1,4 @@
+import { roleAvatarSources } from './role-art.js?v=47';
 import { SUITS, tileSuit, tileRank, tileName, discardHints } from './rules.js?v=21';
 import { newMatch, applyAction, getLegalActions, visibleTileCounts, getAiView } from './engine.js?v=43';
 import { chooseAiAction } from './ai.js?v=21';
@@ -108,7 +109,13 @@ function markGuideSeen() {
   try { localStorage.setItem(guideKey, 'seen'); } catch { /* 同上 */ }
 }
 
-const avatar = role => `./assets/${role}.png`;
+const avatarImages = new Map(roleNames.map(role => {
+  const image = new Image();
+  image.src = roleAvatarSources[role];
+  image.decode?.().catch(() => {});
+  return [role, image];
+}));
+const avatar = role => avatarImages.get(role).src;
 const victoryArt = role => `./assets/victory-${({ '吉伊': 'chiikawa', '小八': 'hachiware', '乌萨奇': 'usagi', '小飞鼠': 'momonga' })[role]}-v36.webp`;
 const victoryPreloads = [];
 function preloadVictoryArt() {
@@ -240,7 +247,7 @@ function exchangePanel() {
   const hand = state.players[0].hand;
   const mine = state.exchangeChoices[0];
   const chosenSuit = selectedExchange.length ? tileSuit(hand[selectedExchange[0]]) : null;
-  return `<div class="phase-panel">${!guideSeen ? '<div class="guide-step">第 1 步 · 选同一花色的三张牌</div>' : ''}<h2>换三张 · ${direction}</h2><p>${mine ? '你已选好，等待其他牌手。' : '点选三张同花色的牌，再确认交换。'}</p><div class="hand-row">${hand.map((tile, index) => tileHtml(tile, { index, selected: selectedExchange.includes(index), available: !mine, restricted: chosenSuit !== null && tileSuit(tile) !== chosenSuit })).join('')}</div><p class="selection-count">已选 ${chosenSuit === null ? '花色未定' : SUITS[chosenSuit]} · ${selectedExchange.length}/3 张</p>${errorText ? `<p class="error">${errorText}</p>` : ''}<button class="primary" data-action="confirm-exchange" ${mine || selectedExchange.length !== 3 ? 'disabled' : ''}>确认交换</button></div>`;
+  return `<div class="phase-panel exchange-panel">${!guideSeen ? '<div class="guide-step">第 1 步 · 选同一花色的三张牌</div>' : ''}<h2>换三张 · ${direction}</h2><p>${mine ? '你已选好，等待其他牌手。' : '点选三张同花色的牌，再确认交换。'}</p><div class="hand-row">${hand.map((tile, index) => tileHtml(tile, { index, selected: selectedExchange.includes(index), available: !mine, restricted: chosenSuit !== null && tileSuit(tile) !== chosenSuit })).join('')}</div><p class="selection-count">已选 ${chosenSuit === null ? '花色未定' : SUITS[chosenSuit]} · ${selectedExchange.length}/3 张</p>${errorText ? `<p class="error">${errorText}</p>` : ''}<button class="primary" data-action="confirm-exchange" ${mine || selectedExchange.length !== 3 ? 'disabled' : ''}>确认交换</button></div>`;
 }
 
 function lackPanel() {
